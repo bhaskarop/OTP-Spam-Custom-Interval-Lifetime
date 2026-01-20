@@ -113,13 +113,17 @@ class RedisManager:
         
         # Convert to string format for Redis hash
         key = self._get_key(task_id)
+        redis_data = {}
         for k, v in task_data.items():
             if isinstance(v, dict):
-                self.client.hset(key, k, json.dumps(v))
+                redis_data[k] = json.dumps(v)
             elif v is None:
-                self.client.hset(key, k, "")
+                redis_data[k] = ""
             else:
-                self.client.hset(key, k, str(v))
+                redis_data[k] = str(v)
+        
+        # Use hset with mapping dict for Upstash Redis
+        self.client.hset(key, redis_data)
         
         # Set expiry to 24 hours
         self.client.expire(key, 86400)
@@ -147,13 +151,17 @@ class RedisManager:
     def update_task(self, task_id: str, updates: dict) -> None:
         """Update task data in Redis."""
         key = self._get_key(task_id)
+        redis_data = {}
         for k, v in updates.items():
             if isinstance(v, dict):
-                self.client.hset(key, k, json.dumps(v))
+                redis_data[k] = json.dumps(v)
             elif v is None:
-                self.client.hset(key, k, "")
+                redis_data[k] = ""
             else:
-                self.client.hset(key, k, str(v))
+                redis_data[k] = str(v)
+        
+        # Use hset with mapping dict for Upstash Redis
+        self.client.hset(key, redis_data)
     
     def delete_task(self, task_id: str) -> bool:
         """Delete a task from Redis."""

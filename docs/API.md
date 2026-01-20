@@ -7,7 +7,7 @@ Complete API reference and AI agent implementation guide.
 ## Base URL
 
 ```
-http://localhost:5000
+https://bhaskar-op-otp.onrender.com
 ```
 
 ---
