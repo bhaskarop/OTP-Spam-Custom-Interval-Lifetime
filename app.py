@@ -14,6 +14,7 @@ API Endpoints:
     GET  /health
 """
 import os
+from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from api import TaskManager
@@ -27,12 +28,46 @@ app = Flask(__name__)
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 task_manager = TaskManager(REDIS_URL)
 
+# API Key from environment
+API_KEY = os.environ.get("X-API-KEY")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AUTHENTICATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def require_api_key(f):
+    """Decorator to require valid X-API-KEY header."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get("X-API-KEY")
+        
+        if not API_KEY:
+            # No API key configured - allow access (dev mode)
+            return f(*args, **kwargs)
+        
+        if not api_key:
+            return jsonify({
+                "error": "Missing API key",
+                "message": "X-API-KEY header is required"
+            }), 401
+        
+        if api_key != API_KEY:
+            return jsonify({
+                "error": "Invalid API key",
+                "message": "The provided API key is not valid"
+            }), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TASK ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.route('/api/task/start', methods=['POST'])
+@require_api_key
 def start_task():
     """
     Start a new background OTP task.
@@ -97,6 +132,7 @@ def start_task():
 
 
 @app.route('/api/task/stop/<task_id>', methods=['POST'])
+@require_api_key
 def stop_task(task_id: str):
     """
     Stop a running OTP task.
@@ -129,6 +165,7 @@ def stop_task(task_id: str):
 
 
 @app.route('/api/task/<task_id>', methods=['GET'])
+@require_api_key
 def get_task(task_id: str):
     """
     Get detailed information about a task.
@@ -181,6 +218,7 @@ def get_task(task_id: str):
 
 
 @app.route('/api/tasks', methods=['GET'])
+@require_api_key
 def list_tasks():
     """
     List all tasks.
@@ -217,6 +255,7 @@ def list_tasks():
 
 
 @app.route('/api/task/<task_id>', methods=['DELETE'])
+@require_api_key
 def delete_task(task_id: str):
     """
     Delete a task (must be stopped first).
