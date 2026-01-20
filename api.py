@@ -122,8 +122,8 @@ class RedisManager:
             else:
                 redis_data[k] = str(v)
         
-        # Use hset with mapping dict for Upstash Redis
-        self.client.hset(key, redis_data)
+        # Use hset with values= kwarg for Upstash Redis
+        self.client.hset(key, values=redis_data)
         
         # Set expiry to 24 hours
         self.client.expire(key, 86400)
@@ -160,8 +160,8 @@ class RedisManager:
             else:
                 redis_data[k] = str(v)
         
-        # Use hset with mapping dict for Upstash Redis
-        self.client.hset(key, redis_data)
+        # Use hset with values= kwarg for Upstash Redis
+        self.client.hset(key, values=redis_data)
     
     def delete_task(self, task_id: str) -> bool:
         """Delete a task from Redis."""
